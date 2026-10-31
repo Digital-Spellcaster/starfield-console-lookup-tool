@@ -1,1 +1,19 @@
-\# Starfield Console &amp; Workbench Master Lookup A zero-dependency, standalone HTML5/JS utility designed for manual workbench crafting, precise FormID reference, and console-driven inventory management in \*Starfield\*. Provides audited master FormIDs and single-click console command strings for physical crafting assets, components, equipment, and materials. --- ## ⚡ Key Features \* \*\*Manual Crafting Priority\*\*: Focuses on stocking physical crafting assets, exotic materials, and modular upgrade components (\`003197DB\`–\`003197E7\`) for authentic workbench crafting loops without forced \`.amod\` / \`.omod\` script injections. \* \*\*Audited FormID Integrity\*\*: Standardizes base game and plugin FormIDs against master \`.esm\` records, correcting syntax mismatches and legacy wiki errors across weapons, suits, and items. \* \*\*One-Click Batch Staging\*\*: Includes macro utilities that generate formatted \`player.additem\` strings for single items or full component suites (e.g., all 13 physical upgrade modules and X-Tech simultaneously). \* \*\*Ergonomic Controls\*\*: Real-time text parsing, load-order-aware hexadecimal formatting, quantity toggles, and instant clipboard submission via click or hotkey. \* \*\*Single-File Portability\*\*: Runs locally as a standalone HTML5/CSS3/JavaScript application with zero framework dependencies, web servers, or external network calls. --- ## 🚀 Quick Start 1\. Open \`index.html\` in any web browser. 2\. Search or select your item or component macro. 3\. Click to copy the sanitized command string (\`player.additem
+# Starfield Console Command & Workbench Master Lookup v2
+
+An audited, lightning-fast single-file web utility designed for instant Starfield console command generation, item lookups, and workbench upgrade module management.
+
+## Features
+* **Instant Client-Side Search:** Instantly filter across weapons, ammo, inorganic/organic resources, manufactured components, spacesuits, apparel, food, and craftable X-Tech/upgrade modules.
+* **Smart Hex Formatting:** Automatically strips leading zeros for clean console input (`player.additem 2033e3d 100`) with an optional toggle for full FormIDs.
+* **One-Click Copy:** Click any command row or hit **Enter** on your search query to instantly copy the command to your clipboard.
+* **Batch Upgrades:** Includes a one-click batch command generator to inject X-Tech and all 13 workbench upgrade modules simultaneously.
+* **INARA / ESM Audited:** Verified IDs built for modern modded and vanilla gameplay sessions.
+
+## Usage
+1. Open the live web app.
+2. Type any item name, category, or hex ID into the search box.
+3. Adjust the quantity preset or input custom amounts.
+4. Click the command box to copy it, press `~` in-game, and paste it into the Starfield console.
+
+## License
+Distributed under the MIT License. See `LICENSE` for more information.
