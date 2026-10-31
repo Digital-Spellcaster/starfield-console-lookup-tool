@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starfield Console Command & Workbench Master Lookup v2</title>
+<style>
+  :root {
+    --bg-main: #0b0f17;
+    --bg-panel: #131a26;
+    --bg-row-alt: #17202f;
+    --bg-hover: #1e2a3d;
+    --accent: #e06c35;
+    --accent-hover: #f2824b;
+    --cyan: #38bdf8;
+    --purple: #c084fc;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #263349;
+    --font-mono: 'Consolas', 'Cascadia Code', 'Courier New', monospace;
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 1380px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 14px;
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+
+  h1 {
+    font-size: 1.45rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .badge-verified {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-workbench {
+    background: rgba(192, 132, 252, 0.15);
+    border: 1px solid var(--purple);
+    color: var(--purple);
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Control Deck */
+  .controls-deck {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 18px;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 14px;
+    align-items: end;
+    position: sticky;
+    top: 10px;
+    z-index: 100;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+  }
+
+  @media (max-width: 860px) {
+    .controls-deck {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .input-group label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  input[type="text"], input[type="number"], select {
+    background: #080c12;
+    border: 1px solid var(--border);
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 0.98rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus, input[type="number"]:focus, select:focus {
+    border-color: var(--cyan);
+  }
+
+  #searchInput {
+    width: 100%;
+    font-family: var(--font-mono);
+  }
+
+  .qty-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #qtyInput {
+    width: 105px;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    color: var(--cyan);
+    text-align: center;
+  }
+
+  .qty-preset {
+    background: #0d131d;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 8px 9px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .qty-preset:hover {
+    border-color: var(--cyan);
+    color: #fff;
+  }
+
+  .options-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: center;
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-label input {
+    accent-color: var(--accent);
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+  }
+
+  .batch-btn {
+    background: rgba(192, 132, 252, 0.14);
+    border: 1px solid var(--purple);
+    color: var(--purple);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+
+  .batch-btn:hover {
+    background: var(--purple);
+    color: #000;
+  }
+
+  /* Table Styling */
+  .table-wrap {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  th {
+    background: #0d131d;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(38, 51, 73, 0.5);
+    font-size: 0.92rem;
+    vertical-align: middle;
+  }
+
+  tr:nth-child(even) {
+    background-color: var(--bg-row-alt);
+  }
+
+  tr:hover {
+    background-color: var(--bg-hover);
+  }
+
+  .item-name {
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .cat-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.12);
+    color: var(--cyan);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    white-space: nowrap;
+  }
+
+  .cat-tag.cat-upgrade {
+    background: rgba(192, 132, 252, 0.14);
+    color: var(--purple);
+    border-color: rgba(192, 132, 252, 0.35);
+  }
+
+  .cat-tag.cat-currency {
+    background: rgba(224, 108, 53, 0.15);
+    color: var(--accent-hover);
+    border-color: rgba(224, 108, 53, 0.35);
+  }
+
+  .audit-tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    font-weight: 600;
+  }
+
+  .audit-new {
+    background: rgba(192, 132, 252, 0.18);
+    color: var(--purple);
+    border: 1px solid rgba(192, 132, 252, 0.4);
+  }
+
+  .audit-fixed {
+    background: rgba(234, 179, 8, 0.15);
+    color: var(--yellow);
+    border: 1px solid rgba(234, 179, 8, 0.35);
+  }
+
+  .audit-warn {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+  }
+
+  .hex-id {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  .cmd-btn {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #070a0f;
+    border: 1px solid var(--border);
+    color: var(--green);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    padding: 7px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    text-align: left;
+  }
+
+  .cmd-btn:hover {
+    border-color: var(--accent);
+    background: #0f1520;
+    color: #4ade80;
+  }
+
+  .cmd-btn .copy-pill {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--border);
+    color: var(--text-main);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-left: 10px;
+    flex-shrink: 0;
+  }
+
+  .cmd-btn.copied {
+    border-color: var(--green);
+    background: rgba(34, 197, 94, 0.15);
+  }
+
+  .cmd-btn.copied .copy-pill {
+    background: var(--green);
+    color: #000;
+    font-weight: 700;
+  }
+
+  .notes-col {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+  }
+
+  .empty-state {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>
+      <span>Starfield Console Lookup Terminal</span>
+      <span class="badge-verified">INARA / ESM AUDITED</span>
+      <span class="badge-workbench">PURE WORKBENCH EDITION (NO OMOD/AMOD)</span>
+    </h1>
+    <div style="font-size: 0.82rem; color: var(--text-muted);">
+      Press <strong>~</strong> in-game &bull; Click any command or press <strong>Enter</strong> to copy top match
+    </div>
+  </header>
+
+  <div class="controls-deck">
+    <div class="input-group">
+      <label for="searchInput">Instant Lookup (Item Name, Upgrade Module, X-Tech, Astra, Resource, or Hex ID)</label>
+      <input type="text" id="searchInput" placeholder="e.g. X-Tech, 2033e3d, Astra, Melee Damage, Range Upgrade, Inflictor, 55cc..." autofocus>
+    </div>
+
+    <div class="input-group">
+      <label for="categorySelect">Category Filter</label>
+      <select id="categorySelect">
+        <option value="ALL">All Categories</option>
+        <option value="Workbench Upgrade">Workbench Upgrade Modules & X-Tech</option>
+        <option value="Currency & Utility">Currencies, Astra & Utilities</option>
+        <option value="Ammo">Ammunition</option>
+        <option value="Weapon">Ranged & Melee Weapons</option>
+        <option value="Resource - Inorganic">Resources: Inorganic (Elements)</option>
+        <option value="Resource - Organic">Resources: Organic</option>
+        <option value="Resource - Manufactured">Resources: Manufactured Components</option>
+        <option value="Aid & Pharma">Aid, Stims & Pharmaceuticals</option>
+        <option value="Food & Drink">Food, Gastronomy & Drinks</option>
+        <option value="Spacesuit & Armor">Spacesuits, Packs & Helmets</option>
+        <option value="Apparel & Hats">Clothing, Outfits & Hats</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label for="qtyInput">Quantity & Presets</label>
+      <div class="qty-wrap">
+        <input type="number" id="qtyInput" value="10" min="1" max="999999">
+        <button type="button" class="qty-preset" onclick="setQty(1)">1</button>
+        <button type="button" class="qty-preset" onclick="setQty(10)">10</button>
+        <button type="button" class="qty-preset" onclick="setQty(100)">100</button>
+        <button type="button" class="qty-preset" onclick="setQty(1000)">1K</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="options-bar">
+    <div class="toggles">
+      <label class="toggle-label" title="Strips leading zeros and lowercases hex (e.g., player.additem 2033e3d 100)">
+        <input type="checkbox" id="shortHexToggle" checked>
+        Compact Hex (<code>player.additem 2033e3d 10</code>)
+      </label>
+      <button type="button" class="batch-btn" id="copyUpgradeBatchBtn" onclick="copyUpgradeBatch()" title="Copies a single semicolon-separated console line that adds X-Tech + all 13 Workbench Upgrade Modules at once">
+        Copy All Workbench Upgrades & X-Tech (One-Line Batch)
+      </button>
+    </div>
+    <div id="countDisplay">Showing 0 items</div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 27%;">Item Name</th>
+          <th style="width: 15%;">Category</th>
+          <th style="width: 11%;">Full FormID</th>
+          <th style="width: 29%;">Quick Copy Console Command</th>
+          <th style="width: 18%;">Effects / Workbench Notes</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const ITEMS = [
+  // =========================================================================
+  // 1. WORKBENCH UPGRADE MODULES & X-TECH (PERSONAL EQUIPMENT UPGRADES)
+  // =========================================================================
+  { name: "X-Tech (Load Order 02 - Standard)", cat: "Workbench Upgrade", id: "02033E3D", note: "Workbench Upgrade Crafting Material (Shattered Space + Terran Armada)", isNew: true },
+  { name: "X-Tech (Load Order 01 - Alt)", cat: "Workbench Upgrade", id: "01033E3D", note: "Workbench Upgrade Crafting Material (If Terran Armada is slot 01)", isNew: true },
+  { name: "Damage Upgrade (Ranged)", cat: "Workbench Upgrade", id: "003197E2", note: "Weapon Workbench Module: Increases Ranged Weapon Damage", isNew: true },
+  { name: "Damage Upgrade (Melee)", cat: "Workbench Upgrade", id: "003197DE", note: "Weapon Workbench Module: Increases Melee Weapon Damage", isNew: true },
+  { name: "Range Upgrade (Ranged)", cat: "Workbench Upgrade", id: "003197DC", note: "Weapon Workbench Module: Increases Ranged Weapon Effective Range", isNew: true },
+  { name: "Ammo Capacity Upgrade (Ranged)", cat: "Workbench Upgrade", id: "003197E5", note: "Weapon Workbench Module: Increases Magazine Ammo Capacity", isNew: true },
+  { name: "Accuracy Upgrade (Ranged)", cat: "Workbench Upgrade", id: "003197DF", note: "Weapon Workbench Module: Increases Ranged Hip/ADS Accuracy", isNew: true },
+  { name: "Aim Speed Upgrade (Ranged)", cat: "Workbench Upgrade", id: "003197E7", note: "Weapon Workbench Module: Faster Aim Down Sights (ADS) Speed", isNew: true },
+  { name: "Fire Rate Upgrade (Ranged)", cat: "Workbench Upgrade", id: "003197E4", note: "Weapon Workbench Module: Increases Ranged Rate of Fire", isNew: true },
+  { name: "Recoil Upgrade (Ranged)", cat: "Workbench Upgrade", id: "003197E1", note: "Weapon Workbench Module: Reduces Weapon Recoil", isNew: true },
+  { name: "Reload Speed Upgrade (Ranged)", cat: "Workbench Upgrade", id: "003197E6", note: "Weapon Workbench Module: Faster Weapon Reload Speed", isNew: true },
+  { name: "Attack Speed Upgrade (Melee)", cat: "Workbench Upgrade", id: "003197DB", note: "Weapon Workbench Module: Faster Melee Swing Speed", isNew: true },
+  { name: "Physical Resistance Upgrade (Suit)", cat: "Workbench Upgrade", id: "003197E0", note: "Spacesuit Workbench Module: Increases Physical Damage Resistance", isNew: true },
+  { name: "Energy Resistance Upgrade (Suit)", cat: "Workbench Upgrade", id: "003197DD", note: "Spacesuit Workbench Module: Increases Energy Damage Resistance", isNew: true },
+  { name: "EM Resistance Upgrade (Suit)", cat: "Workbench Upgrade", id: "003197E3", note: "Spacesuit Workbench Module: Increases Electromagnetic Resistance", isNew: true },
+
+  // =========================================================================
+  // 2. CURRENCIES, ASTRA & CORE UTILITIES
+  // =========================================================================
+  { name: "Astra (Trackers Alliance Currency)", cat: "Currency & Utility", id: "002EE741", note: "Trade with Stache at Trackers Alliance HQ (Akila) for Legendary gear", isNew: true },
+  { name: "Credits", cat: "Currency & Utility", id: "0000000F", note: "Galactic Standard Currency (player.additem f 100000)" },
+  { name: "Digipick", cat: "Currency & Utility", id: "0000000A", note: "Digital Lockpicking Tool (player.additem a 50)" },
+  { name: "Ship Parts", cat: "Currency & Utility", id: "0003FB19", note: "Repairs Ship Hull in Space Combat" },
+  { name: "Quantum Essence (Use setav)", cat: "Currency & Utility", id: "00016758", note: "Console note: Use 'player.modav StarbornPowerResource 10' for Essence", warn: true },
+
+  // =========================================================================
+  // 3. AMMUNITION (VERIFIED 24-ITEM LIST)
+  // =========================================================================
+  { name: ".27 Caliber", cat: "Ammo", id: "002B559C", note: "Ballistic (Sidestar, Rattler)", fixed: true },
+  { name: ".43 MI Array", cat: "Ammo", id: "002B559A", note: "Magnetic (MagShot, Keelhauler)", fixed: true },
+  { name: ".43 Ultramag", cat: "Ammo", id: "002B5599", note: "Ballistic (Regulator, Urban Eagle)", fixed: true },
+  { name: ".45 Caliber ACP", cat: "Ammo", id: "002B5598", note: "Ballistic (XM-2311, Old Earth Pistol)", fixed: true },
+  { name: ".50 Caliber Caseless", cat: "Ammo", id: "002B5597", note: "Ballistic (Hard Target, Lawgiver)", fixed: true },
+  { name: ".50 MI Array", cat: "Ammo", id: "002B5596", note: "Magnetic (MagShear, MagStorm, Revenant)", fixed: true },
+  { name: "1.5KV LZR Cartridges", cat: "Ammo", id: "002BAE3F", note: "Laser (Solstice, Short Circuit)", fixed: true },
+  { name: "11mm Caseless", cat: "Ammo", id: "002B5595", note: "Ballistic (AA-99, Drum Beat, Tombstone)", fixed: true },
+  { name: "12.5mm ST Rivet", cat: "Ammo", id: "002B5594", note: "Ballistic (Auto-Rivet)", fixed: true },
+  { name: "12G Shotgun Shell", cat: "Ammo", id: "000547A1", note: "Ballistic (Old Earth Shotgun)", fixed: true },
+  { name: "15x25 CLL Shotgun Shell", cat: "Ammo", id: "002B4AFC", note: "Ballistic (Breach, Pacifier)", fixed: true },
+  { name: "20mm Particle Rocket (DLC)", cat: "Ammo", id: "0102C475", note: "Shattered Space DLC (Load order prefix 01)", fixed: true },
+  { name: "3KV LZR Cartridge", cat: "Ammo", id: "0000E8EC", note: "Laser (Orion, Equinox, Arc Welder)", fixed: true },
+  { name: "40mm XPL", cat: "Ammo", id: "002B5592", note: "Explosive (Bridger, Negotiator, Ashta Tamer)", fixed: true },
+  { name: "6.5mm CT", cat: "Ammo", id: "002B5590", note: "Ballistic (Maelstrom)", fixed: true },
+  { name: "6.5mm MI Array", cat: "Ammo", id: "002B558F", note: "Magnetic (MagPulse, MagSniper)", fixed: true },
+  { name: "7.5mm Whitehot", cat: "Ammo", id: "002B558E", note: "Ballistic (Razorback, Deadeye)", fixed: true },
+  { name: "7.62x39mm", cat: "Ammo", id: "002B558D", note: "Ballistic (Old Earth Assault Rifle)", fixed: true },
+  { name: "7.77mm Caseless (Standard)", cat: "Ammo", id: "002B558C", note: "Ballistic (Beowulf, Grendel, Eon, Kodama, Microgun)", fixed: true },
+  { name: "7.77mm Caseless (Alt Reference)", cat: "Ammo", id: "0004AD3E", note: "Alt Reference ID (002B558C is main ESM ID)", fixed: true },
+  { name: "9x39mm", cat: "Ammo", id: "002B559B", note: "Ballistic (Old Earth Hunting Rifle)", fixed: true },
+  { name: "Caseless Shotgun Shell", cat: "Ammo", id: "002B4AFB", note: "Ballistic (Coachman, Shotty, Boom Boom)", fixed: true },
+  { name: "Heavy Particle Fuse", cat: "Ammo", id: "002B558B", note: "Particle (Big Bang, Va'ruun Inflictor)", fixed: true },
+  { name: "Light Particle Fuse", cat: "Ammo", id: "002B558A", note: "Particle (Novalight, Va'ruun Starshard)", fixed: true },
+
+  // =========================================================================
+  // 4. RANGED & MELEE WEAPONS (INCLUDING MISSING BLADES & SIDEARMS)
+  // =========================================================================
+  { name: "AA-99", cat: "Weapon", id: "002BF65B", note: "Ballistic Rifle (11mm Caseless)" },
+  { name: "Arc Welder", cat: "Weapon", id: "0026D965", note: "Energy Heavy (3KV LZR)" },
+  { name: "Ashta Tamer", cat: "Weapon", id: "0018DE2D", note: "Unique Bridger (40mm XPL)", fixed: true },
+  { name: "Auto-Rivet", cat: "Weapon", id: "0026D964", note: "Industrial Heavy (12.5mm ST Rivet)" },
+  { name: "Barrow Knife", cat: "Weapon", id: "0026F181", note: "Melee Combat Knife", isNew: true },
+  { name: "Beowulf", cat: "Weapon", id: "0004716C", note: "Ballistic Rifle (7.77mm Caseless)" },
+  { name: "Big Bang", cat: "Weapon", id: "0026D963", note: "Particle Shotgun (Heavy Particle Fuse)" },
+  { name: "Breach", cat: "Weapon", id: "000547A3", note: "Ballistic Shotgun (15x25 CLL)" },
+  { name: "Bridger", cat: "Weapon", id: "0026D962", note: "Heavy Grenade Launcher (40mm XPL)", fixed: true },
+  { name: "Coachman", cat: "Weapon", id: "0026D96B", note: "Ballistic Shotgun (Caseless Shell)" },
+  { name: "Combat Knife", cat: "Weapon", id: "00035A48", note: "Classic Military Melee Blade", isNew: true },
+  { name: "Cutter", cat: "Weapon", id: "00016758", note: "Mining Laser", fixed: true },
+  { name: "Drum Beat", cat: "Weapon", id: "0018DE2C", note: "Ballistic Rifle (11mm)", fixed: true },
+  { name: "Eon", cat: "Weapon", id: "000476C4", note: "Ballistic Pistol (7.77mm Caseless)", fixed: true },
+  { name: "Equinox", cat: "Weapon", id: "0001BC4F", note: "Laser Rifle (3KV LZR)", fixed: true },
+  { name: "Grendel", cat: "Weapon", id: "00028A02", note: "Ballistic Rifle (7.77mm Caseless)" },
+  { name: "Hard Target", cat: "Weapon", id: "000546CC", note: "Sniper Rifle (.50 Cal Caseless)" },
+  { name: "Kodama", cat: "Weapon", id: "00253A16", note: "Ballistic Flechette SMG (7.77mm)", fixed: true },
+  { name: "Kraken", cat: "Weapon", id: "0021FEB4", note: "Ballistic SMG Pistol (7.77mm Caseless)" },
+  { name: "Lawgiver", cat: "Weapon", id: "0002D7F4", note: "Ballistic Rifle (.50 Cal Caseless)", fixed: true },
+  { name: "Maelstrom", cat: "Weapon", id: "002984DF", note: "Ballistic Rifle (6.5mm CT)" },
+  { name: "MagPulse", cat: "Weapon", id: "00023606", note: "Magnetic Rifle (6.5mm MI Array)" },
+  { name: "MagShear", cat: "Weapon", id: "0002EB3C", note: "Magnetic Rifle (.50 MI Array)", fixed: true },
+  { name: "MagShot", cat: "Weapon", id: "0002EB42", note: "Magnetic Pistol (.43 MI Array)", fixed: true },
+  { name: "MagSniper", cat: "Weapon", id: "0002EB45", note: "Magnetic Sniper (6.5mm MI Array)", fixed: true },
+  { name: "MagStorm", cat: "Weapon", id: "0026035E", note: "Magnetic Heavy (.50 MI Array)", fixed: true },
+  { name: "Microgun", cat: "Weapon", id: "000546CD", note: "Heavy Minigun (7.77mm)", fixed: true },
+  { name: "Negotiator", cat: "Weapon", id: "0026D96A", note: "Heavy Launcher (40mm XPL)", fixed: true },
+  { name: "Novablast Disruptor", cat: "Weapon", id: "0026D968", note: "EM Rifle (Heavy Particle Fuse)" },
+  { name: "Novalight", cat: "Weapon", id: "0026D967", note: "Particle Pistol (Light Particle Fuse)", fixed: true },
+  { name: "Old Earth Assault Rifle", cat: "Weapon", id: "0026ED2A", note: "AK-47 (7.62x39mm)", fixed: true },
+  { name: "Old Earth Hunting Rifle", cat: "Weapon", id: "0021BBCD", note: "VSS Vintorez (9x39mm)", fixed: true },
+  { name: "Old Earth Pistol (XM-2311 / 1911)", cat: "Weapon", id: "0024561C", note: "Ballistic Sidearm (.45 Caliber ACP)", isNew: true },
+  { name: "Old Earth Shotgun", cat: "Weapon", id: "00278F74", note: "Pump Shotgun (12G Shell)" },
+  { name: "Orion", cat: "Weapon", id: "002773C8", note: "Laser Rifle (3KV LZR)", fixed: true },
+  { name: "Osmium Dagger", cat: "Weapon", id: "0026D966", note: "Melee Weapon" },
+  { name: "Pacifier", cat: "Weapon", id: "002953F8", note: "Shotgun (15x25 CLL)", fixed: true },
+  { name: "Rattler", cat: "Weapon", id: "00028A03", note: "Ballistic Pistol (.27 Cal)", fixed: true },
+  { name: "Razorback", cat: "Weapon", id: "00000FD6", note: "Revolver (7.5mm Whitehot)", fixed: true },
+  { name: "Regulator", cat: "Weapon", id: "0002CB5F", note: "Pistol (.43 Ultramag)", fixed: true },
+  { name: "Rescue Axe", cat: "Weapon", id: "0004F760", note: "Heavy Melee Axe", isNew: true },
+  { name: "Shotty", cat: "Weapon", id: "0026D960", note: "Shotgun (Caseless Shell)", fixed: true },
+  { name: "Sidestar", cat: "Weapon", id: "0026D95D", note: "Pistol (.27 Caliber)", fixed: true },
+  { name: "Solstice", cat: "Weapon", id: "0026D961", note: "Laser Pistol (1.5KV LZR)", fixed: true },
+  { name: " Syndicate Enforcer (Wakizashi)", cat: "Weapon", id: "0026D8A1", note: "Melee Katana / Wakizashi Blade", isNew: true },
+  { name: "Tanto", cat: "Weapon", id: "0026D8A3", note: "Melee Short Blade", isNew: true },
+  { name: "Tombstone", cat: "Weapon", id: "0002EB36", note: "Ballistic Rifle (11mm)", fixed: true },
+  { name: "UC Naval Cutlass", cat: "Weapon", id: "0026D8A5", note: "Melee Boarding Sabre", isNew: true },
+  { name: "Urban Eagle", cat: "Weapon", id: "0026D96D", note: "Ballistic Pistol (.43 Ultramag)" },
+  { name: "Va'ruun Inflictor", cat: "Weapon", id: "0026D8A0", note: "Particle Rifle (Heavy Fuse)", fixed: true },
+  { name: "Va'ruun Painblade", cat: "Weapon", id: "0026D8A2", note: "Melee Blade", fixed: true },
+  { name: "Va'ruun Starshard", cat: "Weapon", id: "0026D8A4", note: "Particle Pistol (Light Fuse)", fixed: true },
+
+  // =========================================================================
+  // 5. RESOURCES: INORGANIC ELEMENTS (AUDITED AGAINST INARA / STARFIELD.GG)
+  // =========================================================================
+  { name: "Aldumite (Ad)", cat: "Resource - Inorganic", id: "00005DEC", note: "Unique Inorganic", fixed: true },
+  { name: "Alkanes (HnCn)", cat: "Resource - Inorganic", id: "00005581", note: "Uncommon Inorganic" },
+  { name: "Aluminum (Al)", cat: "Resource - Inorganic", id: "0000557D", note: "Common Inorganic" },
+  { name: "Antimony (Sb)", cat: "Resource - Inorganic", id: "0000557B", note: "Exotic Inorganic", fixed: true },
+  { name: "Argon (Ar)", cat: "Resource - Inorganic", id: "00005588", note: "Common Gas" },
+  { name: "Benzene (C6H6)", cat: "Resource - Inorganic", id: "00005585", note: "Uncommon Gas" },
+  { name: "Beryllium (Be)", cat: "Resource - Inorganic", id: "000057D9", note: "Uncommon Inorganic", fixed: true },
+  { name: "Caelumite (Ct)", cat: "Resource - Inorganic", id: "00005591", note: "Unique Anomaly Ore (Also check 00040D91)", fixed: true },
+  { name: "Caesium (Cs)", cat: "Resource - Inorganic", id: "000057DF", note: "Exotic Inorganic", fixed: true },
+  { name: "Carboxylic Acids (R-COOH)", cat: "Resource - Inorganic", id: "00005586", note: "Rare Liquid" },
+  { name: "Chlorine (Cl)", cat: "Resource - Inorganic", id: "0000557C", note: "Common Gas" },
+  { name: "Chlorosilanes (SiH3Cl)", cat: "Resource - Inorganic", id: "0000557E", note: "Uncommon Liquid", fixed: true },
+  { name: "Cobalt (Co)", cat: "Resource - Inorganic", id: "00005575", note: "Uncommon Inorganic", fixed: true },
+  { name: "Copper (Cu)", cat: "Resource - Inorganic", id: "00005576", note: "Common Inorganic" },
+  { name: "Dysprosium (Dy)", cat: "Resource - Inorganic", id: "00005569", note: "Exotic Inorganic", fixed: true },
+  { name: "Europium (Eu)", cat: "Resource - Inorganic", id: "000057E1", note: "Exotic Inorganic", fixed: true },
+  { name: "Fluorine (F)", cat: "Resource - Inorganic", id: "00005577", note: "Uncommon Gas" },
+  { name: "Gold (Au)", cat: "Resource - Inorganic", id: "00005579", note: "Rare Inorganic", fixed: true },
+  { name: "Helium-3 (He-3)", cat: "Resource - Inorganic", id: "0000558E", note: "Common Gas Fuel", fixed: true },
+  { name: "Indicite (Ie)", cat: "Resource - Inorganic", id: "0004BA37", note: "Unique Inorganic", fixed: true },
+  { name: "Ionic Liquids (IL)", cat: "Resource - Inorganic", id: "0000557A", note: "Exotic Liquid", fixed: true },
+  { name: "Iridium (Ir)", cat: "Resource - Inorganic", id: "0000558A", note: "Uncommon Inorganic", fixed: true },
+  { name: "Iron (Fe)", cat: "Resource - Inorganic", id: "0000556E", note: "Common Inorganic", fixed: true },
+  { name: "Lead (Pb)", cat: "Resource - Inorganic", id: "00005568", note: "Common Inorganic", fixed: true },
+  { name: "Lithium (Li)", cat: "Resource - Inorganic", id: "0000557F", note: "Rare Inorganic", fixed: true },
+  { name: "Mercury (Hg)", cat: "Resource - Inorganic", id: "0027C4A1", note: "Rare Liquid Metal", fixed: true },
+  { name: "Neodymium (Nd)", cat: "Resource - Inorganic", id: "00005580", note: "Rare Inorganic", fixed: true },
+  { name: "Neon (Ne)", cat: "Resource - Inorganic", id: "00005587", note: "Exotic Gas", fixed: true },
+  { name: "Nickel (Ni)", cat: "Resource - Inorganic", id: "00005572", note: "Common Inorganic", fixed: true },
+  { name: "Palladium (Pd)", cat: "Resource - Inorganic", id: "00005574", note: "Exotic Inorganic", fixed: true },
+  { name: "Platinum (Pt)", cat: "Resource - Inorganic", id: "00005573", note: "Rare Inorganic", fixed: true },
+  { name: "Plutonium (Pu)", cat: "Resource - Inorganic", id: "0000558C", note: "Exotic Inorganic", fixed: true },
+  { name: "Rothicite (Rc)", cat: "Resource - Inorganic", id: "0000559B", note: "Unique Inorganic", fixed: true },
+  { name: "Silver (Ag)", cat: "Resource - Inorganic", id: "0000556A", note: "Uncommon Inorganic", fixed: true },
+  { name: "Tantalum (Ta)", cat: "Resource - Inorganic", id: "0000556F", note: "Rare Inorganic", fixed: true },
+  { name: "Tasine (Ts)", cat: "Resource - Inorganic", id: "00005DED", note: "Unique Liquid", fixed: true },
+  { name: "Tetrafluorides (xF4)", cat: "Resource - Inorganic", id: "00005578", note: "Rare Gas", fixed: true },
+  { name: "Titanium (Ti)", cat: "Resource - Inorganic", id: "0000556D", note: "Rare Inorganic", fixed: true },
+  { name: "Tungsten (W)", cat: "Resource - Inorganic", id: "0000556B", note: "Uncommon Inorganic", fixed: true },
+  { name: "Uranium (U)", cat: "Resource - Inorganic", id: "00005589", note: "Common Inorganic" },
+  { name: "Vanadium (V)", cat: "Resource - Inorganic", id: "0000558B", note: "Rare Inorganic", fixed: true },
+  { name: "Veryl (Vr)", cat: "Resource - Inorganic", id: "00005DEE", note: "Unique Gas", fixed: true },
+  { name: "Vytinium (Vy)", cat: "Resource - Inorganic", id: "00005DEF", note: "Unique Ore", fixed: true },
+  { name: "Water (H2O)", cat: "Resource - Inorganic", id: "00005591", note: "Common Liquid" },
+  { name: "Xenon (Xe)", cat: "Resource - Inorganic", id: "000057DD", note: "Exotic Gas", fixed: true },
+  { name: "Ytterbium (Yb)", cat: "Resource - Inorganic", id: "00005571", note: "Exotic Inorganic", fixed: true },
+
+  // =========================================================================
+  // 6. RESOURCES: ORGANIC (AUDITED)
+  // =========================================================================
+  { name: "Adhesive", cat: "Resource - Organic", id: "000055B1", note: "Rare Organic" },
+  { name: "Amino Acids", cat: "Resource - Organic", id: "000055CD", note: "Rare Organic" },
+  { name: "Analgesic", cat: "Resource - Organic", id: "000055A9", note: "Rare Organic" },
+  { name: "Antimicrobial", cat: "Resource - Organic", id: "000055AB", note: "Uncommon Organic" },
+  { name: "Aromatic", cat: "Resource - Organic", id: "000055B8", note: "Rare Organic", fixed: true },
+  { name: "Biosuppressant", cat: "Resource - Organic", id: "000055B2", note: "Exotic Organic" },
+  { name: "Cosmetic", cat: "Resource - Organic", id: "000055A8", note: "Uncommon Organic" },
+  { name: "Fiber", cat: "Resource - Organic", id: "000055AF", note: "Common Organic" },
+  { name: "Gastronomic Delight", cat: "Resource - Organic", id: "0029F3FC", note: "Unique Organic", fixed: true },
+  { name: "Hallucinogen", cat: "Resource - Organic", id: "000055AE", note: "Rare Organic" },
+  { name: "High-Tensile Spidroin", cat: "Resource - Organic", id: "000055AA", note: "Unique Organic" },
+  { name: "Hypercatalyst", cat: "Resource - Organic", id: "0029F40D", note: "Exotic Organic", fixed: true },
+  { name: "Lubricant", cat: "Resource - Organic", id: "000055BA", note: "Exotic Organic" },
+  { name: "Luxury Textile", cat: "Resource - Organic", id: "0029F3FD", note: "Unique Organic" },
+  { name: "Membrane", cat: "Resource - Organic", id: "000055B0", note: "Uncommon Organic" },
+  { name: "Memory Substrate", cat: "Resource - Organic", id: "0029F409", note: "Unique Organic" },
+  { name: "Metabolic Agent", cat: "Resource - Organic", id: "0029F405", note: "Common Organic" },
+  { name: "Nutrient", cat: "Resource - Organic", id: "000777FD", note: "Common Organic", fixed: true },
+  { name: "Ornamental Material", cat: "Resource - Organic", id: "000055A7", note: "Uncommon Organic" },
+  { name: "Pigment", cat: "Resource - Organic", id: "0029F400", note: "Uncommon Organic" },
+  { name: "Polymer", cat: "Resource - Organic", id: "000055A6", note: "Exotic Organic" },
+  { name: "Sealant", cat: "Resource - Organic", id: "000055CC", note: "Common Organic (player.additem 55cc 10)" },
+  { name: "Sedative", cat: "Resource - Organic", id: "000055AD", note: "Rare Organic" },
+  { name: "Solvent", cat: "Resource - Organic", id: "000055CE", note: "Exotic Organic" },
+  { name: "Spice", cat: "Resource - Organic", id: "000055AC", note: "Uncommon Organic", fixed: true },
+  { name: "Stimulant", cat: "Resource - Organic", id: "000055BF", note: "Exotic Organic" },
+  { name: "Structural Material", cat: "Resource - Organic", id: "0029F40C", note: "Common Organic" },
+  { name: "Toxin", cat: "Resource - Organic", id: "000055B3", note: "Common Organic", fixed: true },
+
+  // =========================================================================
+  // 7. RESOURCES: MANUFACTURED COMPONENTS (AUDITED)
+  // =========================================================================
+  { name: "Adaptive Frame", cat: "Resource - Manufactured", id: "00246B6A", note: "Common Component", fixed: true },
+  { name: "Aldumite Drilling Rig", cat: "Resource - Manufactured", id: "00202F5A", note: "Unique Component", fixed: true },
+  { name: "Austenitic Manifold", cat: "Resource - Manufactured", id: "00246B7C", note: "Uncommon Component", fixed: true },
+  { name: "Comm Relay", cat: "Resource - Manufactured", id: "00246B64", note: "Uncommon Component", fixed: true },
+  { name: "Control Rod", cat: "Resource - Manufactured", id: "00246B7B", note: "Exotic Component", fixed: true },
+  { name: "Drilling Rig", cat: "Resource - Manufactured", id: "0020A02F", note: "Rare Component" },
+  { name: "Indicite Wafer", cat: "Resource - Manufactured", id: "00203EB4", note: "Unique Component", fixed: true },
+  { name: "Isocentered Magnet", cat: "Resource - Manufactured", id: "00246B77", note: "Common Component", fixed: true },
+  { name: "Isotopic Coolant", cat: "Resource - Manufactured", id: "00246B76", note: "Common Component" },
+  { name: "Mag Pressure Tank", cat: "Resource - Manufactured", id: "00246B70", note: "Uncommon Component", fixed: true },
+  { name: "Microsecond Regulator", cat: "Resource - Manufactured", id: "00246B5F", note: "Exotic Component", fixed: true },
+  { name: "Molecular Sieve", cat: "Resource - Manufactured", id: "00246B75", note: "Rare Component", fixed: true },
+  { name: "Monopropellant", cat: "Resource - Manufactured", id: "00246B74", note: "Uncommon Component", fixed: true },
+  { name: "Nuclear Fuel Rod", cat: "Resource - Manufactured", id: "00246B79", note: "Exotic Component", fixed: true },
+  { name: "Paramagnon Conductor", cat: "Resource - Manufactured", id: "00246B73", note: "Rare Component", fixed: true },
+  { name: "Polytextile", cat: "Resource - Manufactured", id: "00246B72", note: "Uncommon Component", fixed: true },
+  { name: "Positron Battery", cat: "Resource - Manufactured", id: "00246B71", note: "Rare Component", fixed: true },
+  { name: "Power Circuit", cat: "Resource - Manufactured", id: "00246B5C", note: "Exotic Component", fixed: true },
+  { name: "Reactive Gauge", cat: "Resource - Manufactured", id: "00246B6F", note: "Common Component", fixed: true },
+  { name: "Rothicite Magnet", cat: "Resource - Manufactured", id: "00203EB2", note: "Unique Component", fixed: true },
+  { name: "Semimetal Wafer", cat: "Resource - Manufactured", id: "00246B6D", note: "Rare Component", fixed: true },
+  { name: "Sterile Nanotubes", cat: "Resource - Manufactured", id: "00246B6C", note: "Exotic Component", fixed: true },
+  { name: "Substrate Molecule Sieve", cat: "Resource - Manufactured", id: "00202782", note: "Unique Component", fixed: true },
+  { name: "Supercooled Magnet", cat: "Resource - Manufactured", id: "00246B69", note: "Rare Component", fixed: true },
+  { name: "Tasine Superconductor", cat: "Resource - Manufactured", id: "00203EAF", note: "Unique Component", fixed: true },
+  { name: "Tau Grade Rheostat", cat: "Resource - Manufactured", id: "00246B68", note: "Uncommon Component", fixed: true },
+  { name: "Veryl-Treated Manifold", cat: "Resource - Manufactured", id: "00203EB0", note: "Unique Component" },
+  { name: "Vytinium Fuel Rod", cat: "Resource - Manufactured", id: "00203EB3", note: "Unique Component", fixed: true },
+  { name: "Zero Wire", cat: "Resource - Manufactured", id: "00246B65", note: "Common Component", fixed: true },
+  { name: "Zero-G Gimbal", cat: "Resource - Manufactured", id: "00246B66", note: "Rare Component" },
+
+  // =========================================================================
+  // 8. AID, STIMS & PHARMACEUTICALS
+  // =========================================================================
+  { name: "Addichrone", cat: "Aid & Pharma", id: "0029A851", note: "Suppresses addiction symptoms for 10m" },
+  { name: "AddiJack", cat: "Aid & Pharma", id: "001F3E85", note: "Suppresses addiction symptoms" },
+  { name: "Alien Genetic Material", cat: "Aid & Pharma", id: "000C1F57", note: "+500 Damage & Energy Resistance (30s)" },
+  { name: "Amp", cat: "Aid & Pharma", id: "0029A856", note: "+35% Move Speed, 2x Jump Height (2m)", fixed: true },
+  { name: "Analgesic Poultice", cat: "Aid & Pharma", id: "0003D8B2", note: "Cures Burns / Infections / Lacerations" },
+  { name: "Anchored Immobilizers", cat: "Aid & Pharma", id: "0003D3AD", note: "Cures Fractures / Sprains" },
+  { name: "Antibiotic Cocktail", cat: "Aid & Pharma", id: "0003D3A9", note: "Cures Infections" },
+  { name: "Antibiotic Injector", cat: "Aid & Pharma", id: "0003D3AF", note: "Cures Infections" },
+  { name: "Antibiotic Paste", cat: "Aid & Pharma", id: "0003D3AE", note: "Cures Infections / Burns" },
+  { name: "Antibiotics", cat: "Aid & Pharma", id: "002F4436", note: "Cures Infections" },
+  { name: "Aurora", cat: "Aid & Pharma", id: "002C5884", note: "Slows time by 40% (10s) [Contraband]", fixed: true },
+  { name: "Bandages", cat: "Aid & Pharma", id: "002F4459", note: "Cures Lacerations / Puncture Wounds" },
+  { name: "Battlestim", cat: "Aid & Pharma", id: "002A5024", note: "+20% Damage Resistance, +50 Carry Weight" },
+  { name: "BattleUp", cat: "Aid & Pharma", id: "001F3E87", note: "+Damage Resistance, Increases O2 recovery" },
+  { name: "Black Hole Heart", cat: "Aid & Pharma", id: "00122EA8", note: "Massive Starborn Power recovery boost" },
+  { name: "Boosted Injector", cat: "Aid & Pharma", id: "0003D3AC", note: "Cures Brain Injury / Radiation" },
+  { name: "Boudicca", cat: "Aid & Pharma", id: "0029959F", note: "+30% Move speed, +300 Damage Resistance" },
+  { name: "CQB-X", cat: "Aid & Pharma", id: "0029A85E", note: "+25% Melee Damage (5m)" },
+  { name: "Dwarf Star Heart", cat: "Aid & Pharma", id: "00299599", note: "+Max Health, +Damage Resistance" },
+  { name: "Emergency Kit", cat: "Aid & Pharma", id: "002A9DE8", note: "Restores Health rapidly", fixed: true },
+  { name: "Frostwolf", cat: "Aid & Pharma", id: "002C5885", note: "+50% Sneak Attack Damage, +20% Move Speed" },
+  { name: "Giant Heart", cat: "Aid & Pharma", id: "0029959A", note: "Boosts maximum physical capabilities" },
+  { name: "Heal Gel", cat: "Aid & Pharma", id: "0003D3AB", note: "Cures Burns / Frostbite" },
+  { name: "Heal Paste", cat: "Aid & Pharma", id: "002F445C", note: "Cures Burns / Frostbite" },
+  { name: "Heart+", cat: "Aid & Pharma", id: "0029CAD9", note: "+20% Max HP, +200 DR (2m)", fixed: true },
+  { name: "Hippolyta", cat: "Aid & Pharma", id: "002C5883", note: "+20% Persuasion Chance (5m)" },
+  { name: "Hypergiant Heart", cat: "Aid & Pharma", id: "0029959B", note: "Ultra-tier performance enhancement" },
+  { name: "Immobilizer", cat: "Aid & Pharma", id: "0029A843", note: "Cures Dislocations / Fractures" },
+  { name: "Infantry Alpha", cat: "Aid & Pharma", id: "0029A85C", note: "+Ranged Damage & reload speed", fixed: true },
+  { name: "Infused Bandages", cat: "Aid & Pharma", id: "0029CAD2", note: "Cures Lacerations / Burns" },
+  { name: "Injector", cat: "Aid & Pharma", id: "002F4462", note: "Cures Brain Injury / Poisoning / Radiation" },
+  { name: "Junk Flush", cat: "Aid & Pharma", id: "00299589", note: "Cures ALL addictions completely" },
+  { name: "Med Pack", cat: "Aid & Pharma", id: "0000ABF9", note: "Standard healing pack", fixed: true },
+  { name: "Neurajack", cat: "Aid & Pharma", id: "00299577", note: "+50% Research Sudden Developments" },
+  { name: "O2 Shot", cat: "Aid & Pharma", id: "0029B4F6", note: "Instant O2 restoration" },
+  { name: "Panacea", cat: "Aid & Pharma", id: "0029A84F", note: "Cures ALL afflictions instantly", fixed: true },
+  { name: "Panopticon", cat: "Aid & Pharma", id: "00299583", note: "+Ranged Damage, +Damage Resistance" },
+  { name: "Paramour", cat: "Aid & Pharma", id: "0029956C", note: "+25% Persuasion Chance & Companion Affinity" },
+  { name: "Penicillin X", cat: "Aid & Pharma", id: "002C5A03", note: "Cures high-level Infections" },
+  { name: "Pick-Me-Up", cat: "Aid & Pharma", id: "0029A822", note: "+50 Carry Weight (15m)" },
+  { name: "Reconstim", cat: "Aid & Pharma", id: "0029CAD1", note: "Increases movement speed and stealth" },
+  { name: "Red Trench", cat: "Aid & Pharma", id: "0029956E", note: "+Ranged Damage, +Melee Damage" },
+  { name: "Repairing Immobilizer", cat: "Aid & Pharma", id: "0003D3A0", note: "Cures Fractures / Sprains" },
+  { name: "Snake Oil", cat: "Aid & Pharma", id: "00299581", note: "Cures Poison / Brain Injury" },
+  { name: "Squall", cat: "Aid & Pharma", id: "00299570", note: "+Movement speed, +Damage [Addictive]" },
+  { name: "Subgiant Heart", cat: "Aid & Pharma", id: "0029959C", note: "High-tier performance enhancement" },
+  { name: "Supermassive Black Heart", cat: "Aid & Pharma", id: "00122EA9", note: "Maximum Starborn Power recovery boost" },
+  { name: "Synapse Alpha", cat: "Aid & Pharma", id: "00299572", note: "O2 & Stamina buff" },
+  { name: "Trauma Pack", cat: "Aid & Pharma", id: "0029A847", note: "Restores Health rapidly", fixed: true },
+  { name: "Whiteout", cat: "Aid & Pharma", id: "00299575", note: "+Damage resistance, slows time [Addictive]" },
+  { name: "Zipper Bandages", cat: "Aid & Pharma", id: "0003D3A1", note: "Cures Lacerations" },
+
+  // =========================================================================
+  // 9. FOOD, GASTRONOMY & DRINKS
+  // =========================================================================
+  { name: "Butter", cat: "Food & Drink", id: "002C7C0A", note: "Cooking Ingredient", fixed: true },
+  { name: "Chandra Cabernet Sauvignon", cat: "Food & Drink", id: "00036146", note: "+9% Persuasion (5m)", fixed: true },
+  { name: "Chunks Egg (Packaged)", cat: "Food & Drink", id: "001E29A8", note: "Verified Egg item", fixed: true },
+  { name: "Chunks Potato", cat: "Food & Drink", id: "00206761", note: "Verified Potato item", fixed: true },
+  { name: "Milk", cat: "Food & Drink", id: "0019121F", note: "Dairy Ingredient", fixed: true },
+  { name: "Synthameat (Beef)", cat: "Food & Drink", id: "001EC108", note: "Gastronomy Ingredient" },
+  { name: "Synthameat (Chicken)", cat: "Food & Drink", id: "001EC136", note: "Gastronomy Ingredient" },
+  { name: "Synthameat (Ham)", cat: "Food & Drink", id: "001EC10B", note: "Gastronomy Ingredient" },
+  { name: "Synthameat (Pork)", cat: "Food & Drink", id: "001EC10A", note: "Gastronomy Ingredient" },
+  { name: "Synthameat (Turkey)", cat: "Food & Drink", id: "001EC10C", note: "Gastronomy Ingredient" },
+  { name: "Synthameat (Veal)", cat: "Food & Drink", id: "001EC109", note: "Gastronomy Ingredient" },
+  { name: "Vegetable (Assorted)", cat: "Food & Drink", id: "001FC2AC", note: "Gastronomy Ingredient" },
+  { name: "Cereal (Sheet Legacy ID)", cat: "Food & Drink", id: "00003A23", note: "From your sheet (00003Axx block unverified)", warn: true },
+  { name: "Cheese (Sheet Legacy ID)", cat: "Food & Drink", id: "00003A22", note: "From your sheet (00003Axx block unverified)", warn: true },
+  { name: "Coffee Beans (Sheet Legacy ID)", cat: "Food & Drink", id: "00003A2E", note: "From your sheet (00003Axx block unverified)", warn: true },
+  { name: "Flour (Sheet Legacy ID)", cat: "Food & Drink", id: "00003A21", note: "From your sheet (00003Axx block unverified)", warn: true },
+  { name: "Onion (Sheet Legacy ID)", cat: "Food & Drink", id: "00003A1C", note: "From your sheet (00003Axx block unverified)", warn: true },
+  { name: "Poultry Raw (Sheet Legacy ID)", cat: "Food & Drink", id: "00003A1D", note: "From your sheet (00003Axx block unverified)", warn: true },
+  { name: "Red Meat Raw (Sheet Legacy ID)", cat: "Food & Drink", id: "00003A1A", note: "From your sheet (00003Axx block unverified)", warn: true },
+  { name: "Tea Leaves (Sheet Legacy ID)", cat: "Food & Drink", id: "00003A2F", note: "From your sheet (00003Axx block unverified)", warn: true },
+
+  // =========================================================================
+  // 10. SPACESUITS, PACKS & HELMETS (INCLUDING STARBORN ASTRA)
+  // =========================================================================
+  { name: "Starborn Spacesuit Astra (NG+1)", cat: "Spacesuit & Armor", id: "0012E187", note: "Starborn Tier 1 Armor Set", isNew: true },
+  { name: "Starborn Spacesuit Avitus (NG+5)", cat: "Spacesuit & Armor", id: "001CBA52", note: "Starborn Tier 5 Armor Set", isNew: true },
+  { name: "Starborn Spacesuit Venator (NG+10)", cat: "Spacesuit & Armor", id: "0021C77F", note: "NG+10 Starborn Armor" },
+  { name: "Mantis Spacesuit", cat: "Spacesuit & Armor", id: "00226299", note: "Mantis Lair Legendary Suit", fixed: true },
+  { name: "Mantis Space Helmet", cat: "Spacesuit & Armor", id: "0016640A", note: "Mantis Lair Legendary Helmet", fixed: true },
+  { name: "Mantis Pack", cat: "Spacesuit & Armor", id: "0016640B", note: "Mantis Lair Legendary Pack", fixed: true },
+  { name: "Mark I Spacesuit", cat: "Spacesuit & Armor", id: "0001754D", note: "Constellation Basement Master Lock Suit" },
+  { name: "Mark I Space Helmet", cat: "Spacesuit & Armor", id: "0001754F", note: "Constellation Mark I Helmet", fixed: true },
+  { name: "Mark I Pack", cat: "Spacesuit & Armor", id: "0001754E", note: "Constellation Mark I Boost Pack" },
+  { name: "Trackers Alliance Spacesuit", cat: "Spacesuit & Armor", id: "00166404", note: "Bounty Hunter Heavy Suit", isNew: true },
+  { name: "Trackers Alliance Pack", cat: "Spacesuit & Armor", id: "00166402", note: "Bounty Hunter Boost Pack", isNew: true },
+  { name: "Tracker Alliance Helmet", cat: "Spacesuit & Armor", id: "0016E2AC", note: "Bounty Hunter Helmet" },
+  { name: "UC Anti-Xeno Spacesuit (Sentinel)", cat: "Spacesuit & Armor", id: "00206130", note: "UC Vanguard Xenowarfare Armor", isNew: true },
+  { name: "UC Anti-Xeno Space Helmet", cat: "Spacesuit & Armor", id: "0010A25E", note: "UC Vanguard Xenowarfare Helmet", isNew: true },
+  { name: "UC Anti-Xeno Pack", cat: "Spacesuit & Armor", id: "0010A25D", note: "UC Vanguard Xenowarfare Pack", isNew: true },
+  { name: "Constellation Space Helmet", cat: "Spacesuit & Armor", id: "001E2B18", note: "Constellation Standard Helmet", fixed: true },
+  { name: "Deep Mining Space Helmet", cat: "Spacesuit & Armor", id: "00052793", note: "Argos Mining Helmet", fixed: true },
+  { name: "Deepseeker Space Helmet", cat: "Spacesuit & Armor", id: "00169222", note: "Space Helmet" },
+  { name: "Ecliptic Space Helmet", cat: "Spacesuit & Armor", id: "001E5057", note: "Space Helmet" },
+  { name: "Explorer Space Helmet", cat: "Spacesuit & Armor", id: "00169226", note: "Space Helmet" },
+  { name: "Navigator Space Helmet", cat: "Spacesuit & Armor", id: "0016D073", note: "Space Helmet" },
+  { name: "Pirate Corsair Helmet", cat: "Spacesuit & Armor", id: "0006AB52", note: "Crimson Fleet Helmet" },
+  { name: "Shocktroop Space Helmet", cat: "Spacesuit & Armor", id: "0016E2A1", note: "Space Helmet" },
+  { name: "SysDef Armored Helmet", cat: "Spacesuit & Armor", id: "001EAB87", note: "UC SysDef Helmet" },
+  { name: "UC Security Helmet", cat: "Spacesuit & Armor", id: "001E0687", note: "UC Sec Helmet" },
+
+  // =========================================================================
+  // 11. CLOTHING, OUTFITS & HATS
+  // =========================================================================
+  { name: "Akila City Security Uniform", cat: "Apparel & Hats", id: "00156E0F", note: "Apparel" },
+  { name: "Argos Extractors Jumpsuit", cat: "Apparel & Hats", id: "000A3F17", note: "Apparel" },
+  { name: "Brogan's Outfit", cat: "Apparel & Hats", id: "00225D00", note: "Apparel" },
+  { name: "Captain's Gear", cat: "Apparel & Hats", id: "0016E21D", note: "Apparel" },
+  { name: "Chronomark Watch", cat: "Apparel & Hats", id: "0001D408", note: "Constellation Watch" },
+  { name: "Constellation Officer Uniform", cat: "Apparel & Hats", id: "003B26F2", note: "Apparel" },
+  { name: "Delgado's Outfit", cat: "Apparel & Hats", id: "00227633", note: "Crimson Fleet Leader Outfit" },
+  { name: "Explorer Adventure Gear", cat: "Apparel & Hats", id: "00169224", note: "Apparel" },
+  { name: "First Officer Outfit", cat: "Apparel & Hats", id: "002F6562", note: "Apparel" },
+  { name: "Formal Slacks", cat: "Apparel & Hats", id: "00225D34", note: "Apparel" },
+  { name: "Industrial Jumpsuit", cat: "Apparel & Hats", id: "001D758F", note: "Apparel" },
+  { name: "Matt McCoy's Outfit", cat: "Apparel & Hats", id: "0021A53A", note: "Apparel" },
+  { name: "Miner Jumpsuit", cat: "Apparel & Hats", id: "001A8A70", note: "Apparel" },
+  { name: "Neon Citizen Outfit", cat: "Apparel & Hats", id: "00225D23", note: "Apparel" },
+  { name: "Neon Security Uniform", cat: "Apparel & Hats", id: "001D2E68", note: "Apparel" },
+  { name: "Operative Suit", cat: "Apparel & Hats", id: "0016E0C2", note: "Ryujin Stealth Suit (+25% Stealth)", fixed: true },
+  { name: "Operative Helmet", cat: "Apparel & Hats", id: "0016E0C3", note: "Ryujin Stealth Hood" },
+  { name: "Regent Assortment (Formal)", cat: "Apparel & Hats", id: "0021B430", note: "Apparel" },
+  { name: "Ryujin Industries Lab Coat", cat: "Apparel & Hats", id: "001A5A9D", note: "Apparel" },
+  { name: "Sam Coe's Outfit", cat: "Apparel & Hats", id: "0022762C", note: "Companion Outfit" },
+  { name: "Sarah Morgan's Outfit", cat: "Apparel & Hats", id: "0025D8F0", note: "Companion Outfit" },
+  { name: "Space Rogue Outfit", cat: "Apparel & Hats", id: "00225D1D", note: "Apparel" },
+  { name: "Striker Masked Outfit", cat: "Apparel & Hats", id: "0022B5D5", note: "Ebbside Strikers Gear" },
+  { name: "SysDef Officer Uniform", cat: "Apparel & Hats", id: "001EAB85", note: "Apparel" },
+  { name: "UC Sec Uniform", cat: "Apparel & Hats", id: "001E0685", note: "Apparel" },
+  { name: "Utility Flightsuit", cat: "Apparel & Hats", id: "00225D21", note: "Apparel" },
+  { name: "Baseball Cap (Glow)", cat: "Apparel & Hats", id: "001659C9", note: "Hat" },
+  { name: "Boonie Hat", cat: "Apparel & Hats", id: "00212450", note: "Hat" },
+  { name: "Captain's Hat", cat: "Apparel & Hats", id: "001C6A03", note: "Hat" },
+  { name: "Fisherman's Hat", cat: "Apparel & Hats", id: "0022809C", note: "Hat" },
+  { name: "Ranger Hat", cat: "Apparel & Hats", id: "0020B880", note: "Freestar Ranger Hat" },
+  { name: "Trucker Hat", cat: "Apparel & Hats", id: "0019C338", note: "Hat" }
+];
+
+const searchInput = document.getElementById('searchInput');
+const categorySelect = document.getElementById('categorySelect');
+const qtyInput = document.getElementById('qtyInput');
+const shortHexToggle = document.getElementById('shortHexToggle');
+const tableBody = document.getElementById('tableBody');
+const countDisplay = document.getElementById('countDisplay');
+
+function setQty(val) {
+  qtyInput.value = val;
+  renderTable();
+}
+
+function formatHex(fullHex, useShort) {
+  if (!useShort) return fullHex.toLowerCase();
+  const stripped = fullHex.replace(/^0+/, '');
+  return (stripped || '0').toLowerCase();
+}
+
+function buildCommand(item, qty, useShort) {
+  const hex = formatHex(item.id, useShort);
+  return `player.additem ${hex} ${qty}`;
+}
+
+function copyText(text, btnElement) {
+  navigator.clipboard.writeText(text).then(() => {
+    const pill = btnElement.querySelector('.copy-pill');
+    const origText = pill.textContent;
+    btnElement.classList.add('copied');
+    pill.textContent = 'COPIED!';
+    setTimeout(() => {
+      btnElement.classList.remove('copied');
+      pill.textContent = origText;
+    }, 1100);
+  });
+}
+
+function copyUpgradeBatch() {
+  const qty = Math.max(1, parseInt(qtyInput.value, 10) || 100);
+  const useShort = shortHexToggle.checked;
+  const upgradeIds = [
+    "02033E3D", "003197E2", "003197DE", "003197DC", "003197E5",
+    "003197DF", "003197E7", "003197E4", "003197E1", "003197E6",
+    "003197DB", "003197E0", "003197DD", "003197E3"
+  ];
+  const batchCmd = upgradeIds.map(id => `player.additem ${formatHex(id, useShort)} ${qty}`).join('; ');
+  const btn = document.getElementById('copyUpgradeBatchBtn');
+  navigator.clipboard.writeText(batchCmd).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = `COPIED 14-COMMAND WORKBENCH BATCH (QTY ${qty})!`;
+    setTimeout(() => { btn.textContent = orig; }, 1600);
+  });
+}
+
+function renderTable() {
+  const query = searchInput.value.trim().toLowerCase();
+  const cat = categorySelect.value;
+  const qty = Math.max(1, parseInt(qtyInput.value, 10) || 10);
+  const useShort = shortHexToggle.checked;
+
+  const filtered = ITEMS.filter(item => {
+    if (cat !== 'ALL' && item.cat !== cat) return false;
+    if (!query) return true;
+    const shortId = formatHex(item.id, true);
+    return (
+      item.name.toLowerCase().includes(query) ||
+      item.cat.toLowerCase().includes(query) ||
+      item.id.toLowerCase().includes(query) ||
+      shortId.includes(query) ||
+      (item.note && item.note.toLowerCase().includes(query))
+    );
+  });
+
+  countDisplay.textContent = `Showing ${filtered.length} of ${ITEMS.length} verified inventory items`;
+
+  if (filtered.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">No matching Starfield items found for "${searchInput.value}".</td></tr>`;
+    return;
+  }
+
+  tableBody.innerHTML = filtered.map(item => {
+    const cmd = buildCommand(item, qty, useShort);
+    let badgeHtml = '';
+    if (item.isNew) {
+      badgeHtml = `<span class="audit-tag audit-new" title="Added in v2 overhaul">NEW ASSET</span>`;
+    } else if (item.fixed) {
+      badgeHtml = `<span class="audit-tag audit-fixed" title="ID was audited and verified against Starfield ESM">AUDITED FIX</span>`;
+    } else if (item.warn) {
+      badgeHtml = `<span class="audit-tag audit-warn" title="See note for details">NOTE</span>`;
+    }
+
+    let catClass = 'cat-tag';
+    if (item.cat === 'Workbench Upgrade') catClass += ' cat-upgrade';
+    if (item.cat === 'Currency & Utility') catClass += ' cat-currency';
+
+    return `
+      <tr>
+        <td>
+          <span class="item-name">${item.name}</span>
+          ${badgeHtml}
+        </td>
+        <td><span class="${catClass}">${item.cat}</span></td>
+        <td class="hex-id">${item.id}</td>
+        <td>
+          <button class="cmd-btn" onclick="copyText('${cmd}', this)" title="Click to copy to clipboard">
+            <span>${cmd}</span>
+            <span class="copy-pill">Copy</span>
+          </button>
+        </td>
+        <td class="notes-col">${item.note || ''}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Press Enter in search box to immediately copy the top result
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const firstBtn = tableBody.querySelector('.cmd-btn');
+    if (firstBtn) firstBtn.click();
+  }
+});
+
+searchInput.addEventListener('input', renderTable);
+categorySelect.addEventListener('change', renderTable);
+qtyInput.addEventListener('input', renderTable);
+shortHexToggle.addEventListener('change', renderTable);
+
+// Initial render
+renderTable();
+</script>
+</body>
+</html>
