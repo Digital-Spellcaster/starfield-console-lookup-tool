@@ -17,3 +17,6 @@ An audited, lightning-fast single-file web utility designed for instant Starfiel
 
 ## License
 Distributed under the MIT License. See `LICENSE` for more information.
+
+## AI Creation Disclaimer
+This tool was developed using Gemini 4 Argon with medium thinking level. Starting from an error-riddled list of console commands, the AI transformed the inputs into a fully indexed, cross-referenced, and offline HTML project in just two prompts.
